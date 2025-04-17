@@ -1,0 +1,58 @@
+name: 'PR Code Review Bot'
+description: 'Automatically reviews PRs using Azure OpenAI to provide feedback on code quality'
+author: 'srinathakkem'
+
+inputs:
+  github-token:
+    description: 'GitHub token for API access'
+    required: true
+  azure-openai-endpoint:
+    description: 'Azure OpenAI endpoint URL'
+    required: true
+  azure-openai-key:
+    description: 'Azure OpenAI API key'
+    required: true
+  azure-openai-deployment:
+    description: 'Azure OpenAI deployment name'
+    required: true
+  azure-openai-api-version:
+    description: 'Azure OpenAI API version'
+    required: false
+    default: '2025-02-01-preview'
+  exclude:
+    description: 'Comma-separated patterns of files to exclude from review'
+    required: false
+    default: '*.md,*.txt,*.json'
+  enabled-reviewers:
+    description: 'Comma-separated list of enabled reviewers'
+    required: false
+    default: 'ai'
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      shell: bash
+      run: pip install -r ${{ github.action_path }}/requirements.txt
+
+    - name: Run PR Review
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        AZURE_OPENAI_ENDPOINT: ${{ inputs.azure-openai-endpoint }}
+        AZURE_OPENAI_KEY: ${{ inputs.azure-openai-key }}
+        AZURE_OPENAI_DEPLOYMENT: ${{ inputs.azure-openai-deployment }}
+        AZURE_OPENAI_API_VERSION: ${{ inputs.azure-openai-api-version }}
+        INPUT_EXCLUDE: ${{ inputs.exclude }}
+        INPUT_ENABLED_REVIEWERS: ${{ inputs.enabled-reviewers }}
+      run: python ${{ github.action_path }}/main.py
+      shell: bash
+
+branding:
+  icon: 'code'
+  color: 'blue'
